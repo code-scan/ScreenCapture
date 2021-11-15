@@ -10,13 +10,19 @@ import (
 	"strings"
 )
 
-var TaskQueue = make(chan string, 100)
+type request struct {
+	ID  int
+	URL string
+}
+
+var TaskQueue = make(chan request, 100)
 
 func InitWorker() {
 	for i := 0; i < 100; i++ {
 		module.GoPool.Run(func() {
 			dp := module.NewChrome()
-			for t := range TaskQueue {
+			for req := range TaskQueue {
+				t := req.URL
 				if strings.Index(t, "http") != 0 {
 					t = fmt.Sprintf("http://%s", t)
 				}
@@ -24,7 +30,7 @@ func InitWorker() {
 				if err != nil {
 					continue
 				}
-				dp.Capture(t, path.Join("result", fmt.Sprintf("%s.png", u.Host)))
+				dp.Capture(t, path.Join("result", fmt.Sprintf("%d_%s.png", req.ID, u.Host)))
 			}
 		})
 	}
@@ -36,9 +42,13 @@ func InsertTask() {
 		panic(err)
 	}
 	tasks := strings.Split(string(task), "\n")
-	for _, t := range tasks {
+	for i, t := range tasks {
 		log.Println("[*] Push Task : ", t)
-		TaskQueue <- strings.TrimSpace(t)
+
+		TaskQueue <- request{
+			ID:  i,
+			URL: t,
+		}
 	}
 
 }
