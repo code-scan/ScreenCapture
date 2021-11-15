@@ -2,10 +2,8 @@ package module
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"log"
-	"strings"
 
 	"github.com/chromedp/chromedp"
 )
@@ -25,9 +23,6 @@ func (this *Chrome) Capture(url, save string) {
 	var buf []byte
 	if url == "" {
 		return
-	}
-	if strings.Index(url, "http") != 0 {
-		url = fmt.Sprintf("http://%s", url)
 	}
 	if err := chromedp.Run(this.ctx, this.fullScreenshot(url, 90, &buf)); err != nil {
 		log.Println(url, err)
